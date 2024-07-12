@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>流动儿童的生活</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        .story-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+        }
+
+        .options li {
+            margin: 10px 0;
+        }
+
+        .choice-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .choice-button:hover {
+            background-color: #0056b3;
+        }
+
+        .next-button {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="story-container">
+        <div id="question" class="question"></div>
+        <ul id="options" class="options"></ul>
+        <button id="next" class="next-button">下一题</button>
+    </div>
+
+    <script>
+        const story = {
+            "start": {
+                "text": "你是一名流动儿童，今天是你在新城市的第一天。你决定首先去哪里？",
+                "choices": [
+                    { "text": "去学校", "next": "school" },
+                    { "text": "去社区中心", "next": "community" }
+                ]
+            },
+            "school": {
+                "text": "你来到了一所新学校，这里的学生对你很好奇。你想做什么？",
+                "choices": [
+                    { "text": "跟大家自我介绍", "next": "introduce" },
+                    { "text": "找一个安静的地方坐下", "next": "sit" }
+                ]
+            },
+            "community": {
+                "text": "你到了社区中心，那里有很多活动可以参加。你选择了？",
+                "choices": [
+                    { "text": "参加体育活动", "next": "sports" },
+                    { "text": "参加绘画课程", "next": "art" }
+                ]
+            },
+            "introduce": {
+                "text": "大家对你很友好，你交到了新朋友。今天过得很开心。",
+                "choices": [
+                    { "text": "重新开始", "next": "start" }
+                ]
+            },
+            "sit": {
+                "text": "你选择了一个安静的地方坐下，观察周围的一切。今天过得很平静。",
+                "choices": [
+                    { "text": "重新开始", "next": "start" }
+                ]
+            },
+            "sports": {
+                "text": "你参加了体育活动，感到很放松和开心。今天过得很充实。",
+                "choices": [
+                    { "text": "重新开始", "next": "start" }
+                ]
+            },
+            "art": {
+                "text": "你参加了绘画课程，发现自己很有艺术天赋。今天过得很有成就感。",
+                "choices": [
+                    { "text": "重新开始", "next": "start" }
+                ]
+            }
+        };
+
+        let currentNode = "start";
+
+        function displayStoryNode(nodeKey) {
+            const node = story[nodeKey];
+            document.getElementById("question").textContent = node.text;
+            const optionsElement = document.getElementById("options");
+            optionsElement.innerHTML = "";
+            node.choices.forEach((choice, index) => {
+                const li = document.createElement("li");
+                const button = document.createElement("button");
+                button.textContent = choice.text;
+                button.className = "choice-button";
+                button.onclick = () => {
+                    currentNode = choice.next;
+                    displayStoryNode(currentNode);
+                };
+                li.appendChild(button);
+                optionsElement.appendChild(li);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            displayStoryNode(currentNode);
+        });
+    </script>
+</body>
+
+</html>

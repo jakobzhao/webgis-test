@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>知识贪吃蛇</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        canvas {
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .question-container {
+            display: none;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .choices {
+            list-style: none;
+            padding: 0;
+        }
+
+        .choices li {
+            margin: 10px 0;
+        }
+
+        .choice-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .choice-button:hover {
+            background-color: #0056b3;
+        }
+
+        .start-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .start-button:hover {
+            background-color: #218838;
+        }
+
+        .intro {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>知识贪吃蛇</h1>
+    <div class="intro" id="intro">
+        使用方向键控制蛇的移动。吃到食物后会出现问题，回答正确才能继续游戏。
+    </div>
+    <button class="start-button" id="startButton">开始游戏</button>
+    <canvas id="gameCanvas" width="600" height="600" style="display: none;"></canvas>
+    <div class="question-container" id="questionContainer">
+        <div id="question" class="question"></div>
+        <ul id="choices" class="choices"></ul>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const questionContainer = document.getElementById('questionContainer');
+        const questionElement = document.getElementById('question');
+        const choicesElement = document.getElementById('choices');
+        const startButton = document.getElementById('startButton');
+        const introElement = document.getElementById('intro');
+
+        const gridSize = 20;
+        let snake = [{ x: 300, y: 300 }, { x: 280, y: 300 }, { x: 260, y: 300 }];
+        let direction = 'right';
+        let food = { x: 200, y: 200 };
+        let score = 0;
+        let gameInterval;
+
+        const questions = [
+            {
+                question: "什么是流动儿童？",
+                choices: ["城市中的儿童", "农村中的儿童", "随父母到城市打工的儿童", "孤儿"],
+                answer: 2
+            },
+            {
+                question: "流动儿童面临的主要问题有哪些？",
+                choices: ["教育问题", "健康问题", "心理问题", "以上都是"],
+                answer: 3
+            },
+            {
+                question: "流动儿童通常来自哪里？",
+                choices: ["城市", "农村", "国外", "沿海地区"],
+                answer: 1
+            },
+            {
+                question: "以下哪项政策旨在帮助流动儿童？",
+                choices: ["免费午餐计划", "教育公平政策", "环境保护政策", "就业促进政策"],
+                answer: 1
+            },
+            {
+                question: "流动儿童的主要身份特征是？",
+                choices: ["户籍不在现居地", "没有身份证", "孤儿", "以上都是"],
+                answer: 0
+            },
+            {
+                question: "流动儿童教育的主要挑战是什么？",
+                choices: ["师资不足", "教学设施差", "户籍限制", "以上都是"],
+                answer: 2
+            },
+            {
+                question: "流动儿童的父母通常从事什么工作？",
+                choices: ["办公室工作", "工厂工作", "农民", "以上都是"],
+                answer: 1
+            },
+            {
+                question: "以下哪种措施有助于改善流动儿童的处境？",
+                choices: ["加强心理辅导", "提供优质教育资源", "改善生活条件", "以上都是"],
+                answer: 3
+            },
+            {
+                question: "流动儿童在城市中面临的最大社会障碍是什么？",
+                choices: ["语言障碍", "文化差异", "经济贫困", "户籍制度"],
+                answer: 3
+            },
+            {
+                question: "流动儿童的心理健康状况常常受到哪些因素影响？",
+                choices: ["家庭环境", "学校教育", "社会支持", "以上都是"],
+                answer: 3
+            },
+            // 更多问题...
+        ];
+
+        function startGame() {
+            startButton.style.display = 'none';
+            introElement.style.display = 'none';
+            canvas.style.display = 'block';
+            gameInterval = setInterval(gameLoop, 100);
+        }
+
+        function drawSnake() {
+            snake.forEach(segment => {
+                ctx.fillStyle = 'lightgreen';
+                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+                ctx.strokeStyle = 'darkgreen';
+                ctx.strokeRect(segment.x, segment.y, gridSize, gridSize);
+            });
+        }
+
+        function moveSnake() {
+            const head = { ...snake[0] };
+
+            switch (direction) {
+                case 'right':
+                    head.x += gridSize;
+                    break;
+                case 'left':
+                    head.x -= gridSize;
+                    break;
+                case 'up':
+                    head.y -= gridSize;
+                    break;
+                case 'down':
+                    head.y += gridSize;
+                    break;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                if (score % 5 === 0) {
+                    clearInterval(gameInterval);
+                    askQuestion();
+                } else {
+                    generateFood();
+                }
+            } else {
+                snake.pop();
+            }
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * canvas.width / gridSize) * gridSize;
+            food.y = Math.floor(Math.random() * canvas.height / gridSize) * gridSize;
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            moveSnake();
+            drawSnake();
+            drawFood();
+            checkCollision();
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                gameOver();
+            }
+
+            for (let i = 4; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver();
+                }
+            }
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            alert('游戏结束');
+            document.location.reload();
+        }
+
+        function changeDirection(event) {
+            const keyPressed = event.key;
+            switch (keyPressed) {
+                case 'ArrowUp':
+                    if (direction !== 'down') direction = 'up';
+                    break;
+                case 'ArrowDown':
+                    if (direction !== 'up') direction = 'down';
+                    break;
+                case 'ArrowLeft':
+                    if (direction !== 'right') direction = 'left';
+                    break;
+                case 'ArrowRight':
+                    if (direction !== 'left') direction = 'right';
+                    break;
+            }
+        }
+
+        function askQuestion() {
+            const currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            questionElement.textContent = currentQuestion.question;
+            choicesElement.innerHTML = '';
+
+            currentQuestion.choices.forEach((choice, index) => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.textContent = choice;
+                button.className = 'choice-button';
+                button.onclick = () => checkAnswer(index, currentQuestion.answer);
+                li.appendChild(button);
+                choicesElement.appendChild(li);
+            });
+
+            questionContainer.style.display = 'block';
+        }
+
+        function checkAnswer(selectedIndex, correctIndex) {
+            if (selectedIndex === correctIndex) {
+                questionContainer.style.display = 'none';
+                gameInterval = setInterval(gameLoop, 100);
+            } else {
+                alert('回答错误，游戏结束');
+                document.location.reload();
+            }
+        }
+
+        document.addEventListener('keydown', changeDirection);
+        startButton.addEventListener('click', startGame);
+
+        generateFood();
+    </script>
+</body>
+
+</html>
