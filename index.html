@@ -1,185 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 
 <head>
-    <meta charset="utf-8">
-    <title>MLK's Life Path Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留守儿童在中国的生活现状</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.min.css">
     <style>
         body {
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 2.5em;
+        }
+
+        .section {
+            padding: 50px 20px;
+            text-align: center;
+        }
+
+        .chart {
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
+            height: 400px;
+            margin: 50px 0;
+        }
+
+        .placeholder-image {
             width: 100%;
+            height: 300px;
+            background-color: #ddd;
+            margin: 20px 0;
         }
     </style>
 </head>
 
 <body>
-    <div id="map"></div>
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1Ijoiemhhb2JvIiwiYSI6ImNqaW85NzNrdDA3OXczcHQ5aTZvYmtjc2gifQ.ummEQxsRIweCIdv9CRRzOw';
 
-        var map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/satellite-v9',
-            center: [-90.0, 35.0],
-            zoom: 4,
-            pitch: 60
+    <div class="header">
+        留守儿童在中国的生活现状
+    </div>
+
+    <div class="section" id="introduction">
+        <h2>简介</h2>
+        <p>在中国，留守儿童是指父母因工作原因离开家乡并将孩子留在农村的儿童。他们面临着各种挑战，包括教育、心理健康和社会支持的缺乏。</p>
+        <div class="placeholder-image"></div>
+    </div>
+
+    <div class="section" id="challenges">
+        <h2>面临的挑战</h2>
+        <p>留守儿童由于父母不在身边，常常面临以下几个方面的挑战：</p>
+        <ul style="text-align: left; max-width: 800px; margin: 0 auto;">
+            <li><b>教育资源不足：</b>许多留守儿童所在的农村地区教育资源匮乏，教师数量不足，教学质量不高。</li>
+            <li><b>心理健康问题：</b>由于缺乏父母的关爱和陪伴，留守儿童容易产生心理健康问题，如抑郁、焦虑等。</li>
+            <li><b>社会支持缺乏：</b>留守儿童缺乏社区和社会的支持，难以获得必要的社会资源。</li>
+        </ul>
+        <div class="placeholder-image"></div>
+    </div>
+
+    <div class="section" id="statistics">
+        <h2>统计数据</h2>
+        <p>以下是近年来中国留守儿童数量的统计数据以及他们父母外出务工的情况：</p>
+        <div id="chart1" class="chart"></div>
+        <div id="chart2" class="chart"></div>
+        <div class="placeholder-image"></div>
+    </div>
+
+    <div class="section" id="map-section">
+        <h2>留守儿童分布地图</h2>
+        <p>留守儿童在中国的分布情况如下图所示：</p>
+        <div id="map"></div>
+        <div class="placeholder-image"></div>
+    </div>
+
+    <div class="section" id="solutions">
+        <h2>解决方案</h2>
+        <p>为了帮助留守儿童更好地成长，我们可以采取以下措施：</p>
+        <ul style="text-align: left; max-width: 800px; margin: 0 auto;">
+            <li><b>增加教育投入：</b>政府和社会应加大对农村教育的投入，改善教育设施，提升教师素质。</li>
+            <li><b>提供心理支持：</b>为留守儿童提供心理咨询服务，帮助他们解决心理问题。</li>
+            <li><b>加强社会支持：</b>社区应建立支持网络，提供必要的社会资源和帮助。</li>
+        </ul>
+        <div class="placeholder-image"></div>
+    </div>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize charts
+        var chart1 = c3.generate({
+            bindto: '#chart1',
+            data: {
+                columns: [
+                    ['留守儿童数量', 6100, 5900, 5700, 5500, 5300]
+                ],
+                type: 'bar'
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: ['2016', '2017', '2018', '2019', '2020']
+                }
+            }
         });
 
-        map.on('load', function () {
-            map.addSource('terrain', {
-                'type': 'raster-dem',
-                'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                'tileSize': 512,
-                'maxzoom': 14
-            });
-            map.setTerrain({ 'source': 'terrain', 'exaggeration': 1.5 });
+        var chart2 = c3.generate({
+            bindto: '#chart2',
+            data: {
+                columns: [
+                    ['父母双方外出', 70],
+                    ['仅父亲外出', 20],
+                    ['仅母亲外出', 10]
+                ],
+                type: 'pie'
+            }
+        });
 
-            map.addLayer({
-                'id': 'terrain-data',
-                'type': 'hillshade',
-                'source': 'terrain',
-                'layout': {},
-                'paint': {
-                    'hillshade-exaggeration': 0.5
-                }
-            });
+        // Initialize map
+        var map = L.map('map').setView([35.8617, 104.1954], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-            var locations = [
-                { name: 'Atlanta, GA (Birthplace)', coords: [-84.3879824, 33.7489954], year: 1929, description: 'MLK was born here.' },
-                { name: 'Boston, MA (Education)', coords: [-71.0588801, 42.3600825], year: 1951, description: 'Studied at Boston University.' },
-                { name: 'Montgomery, AL (Bus Boycott)', coords: [-86.2999689, 32.3668052], year: 1955, description: 'Led the Montgomery Bus Boycott.' },
-                { name: 'Washington, D.C. (I Have a Dream)', coords: [-77.0368707, 38.9071923], year: 1963, description: 'Delivered "I Have a Dream" speech.' },
-                { name: 'Birmingham, AL (Campaign)', coords: [-86.80248999999999, 33.5185892], year: 1963, description: 'Led the Birmingham Campaign.' },
-                { name: 'Selma, AL (Marches)', coords: [-87.0164, 32.4075], year: 1965, description: 'Led the Selma to Montgomery marches.' },
-                { name: 'Memphis, TN (Assassination)', coords: [-90.0489801, 35.1495343], year: 1968, description: 'MLK was assassinated here.' }
-            ];
+        var regions = [
+            { coords: [30.5928, 114.3055], title: '湖北省' },
+            { coords: [31.2304, 121.4737], title: '上海市' },
+            { coords: [34.3416, 108.9398], title: '陕西省' },
+            { coords: [23.1291, 113.2644], title: '广东省' },
+            { coords: [39.9042, 116.4074], title: '北京市' }
+        ];
 
-            map.loadImage('https://static.vecteezy.com/system/resources/previews/030/246/483/original/3d-round-white-sphere-realistic-glossy-3d-ball-ai-generative-free-png.png', function (error, image) {
-                if (error) throw error;
-                map.addImage('custom-sphere', image);
-
-                map.addSource('points', {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'FeatureCollection',
-                        'features': locations.map(function (location) {
-                            return {
-                                'type': 'Feature',
-                                'geometry': {
-                                    'type': 'Point',
-                                    'coordinates': location.coords
-                                },
-                                'properties': {
-                                    'title': location.name,
-                                    'description': location.description,
-                                    'year': location.year
-                                }
-                            };
-                        })
-                    }
-                });
-
-                map.addLayer({
-                    'id': 'points',
-                    'type': 'symbol',
-                    'source': 'points',
-                    'layout': {
-                        'icon-image': 'custom-sphere',
-                        'icon-size': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            4, 0.05,
-                            10, 0.2
-                        ],
-                        'icon-allow-overlap': false,
-                        'text-field': ['concat', ['get', 'title'], '\n', ['get', 'description'], '\n', ['get', 'year']],
-                        'text-offset': [0, 1.5],
-                        'text-anchor': 'top',
-                        'text-size': 12,
-                        'text-max-width': 8,
-                    },
-                    'paint': {
-                        'text-halo-color': '#ffffff',
-                        'text-halo-width': 2
-                    }
-                });
-
-                locations.forEach(function (location) {
-                    var heightFactor = (location.year - 1929) * 50; // Scale height based on the year
-
-                    map.addLayer({
-                        'id': 'sphere-' + location.name,
-                        'type': 'fill-extrusion',
-                        'source': {
-                            'type': 'geojson',
-                            'data': {
-                                'type': 'FeatureCollection',
-                                'features': [{
-                                    'type': 'Feature',
-                                    'geometry': {
-                                        'type': 'Polygon',
-                                        'coordinates': [[
-                                            [location.coords[0] - 0.1, location.coords[1] - 0.1],
-                                            [location.coords[0] - 0.1, location.coords[1] + 0.1],
-                                            [location.coords[0] + 0.1, location.coords[1] + 0.1],
-                                            [location.coords[0] + 0.1, location.coords[1] - 0.1],
-                                            [location.coords[0] - 0.1, location.coords[1] - 0.1]
-                                        ]]
-                                    },
-                                    'properties': {
-                                        'height': heightFactor
-                                    }
-                                }]
-                            }
-                        },
-                        'paint': {
-                            'fill-extrusion-color': '#888',
-                            'fill-extrusion-height': ['get', 'height'],
-                            'fill-extrusion-base': 0,
-                            'fill-extrusion-opacity': 0.6
-                        }
-                    });
-                });
-            });
-
-            map.addLayer({
-                'id': 'route',
-                'type': 'line',
-                'source': {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'Feature',
-                        'properties': {},
-                        'geometry': {
-                            'type': 'LineString',
-                            'coordinates': locations.map(function (location) {
-                                return location.coords;
-                            })
-                        }
-                    }
-                },
-                'layout': {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'paint': {
-                    'line-color': '#888',
-                    'line-width': 6
-                }
-            });
+        regions.forEach(function (region) {
+            L.marker(region.coords).addTo(map).bindPopup(region.title);
         });
     </script>
+
 </body>
 
 </html>

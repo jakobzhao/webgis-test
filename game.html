@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流动儿童知识问答</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .question-box {
+            margin: 20px auto;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+        }
+
+        .options li {
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .incorrect {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .next-button {
+            margin-top: 20px;
+            display: none;
+        }
+
+        @media (min-width: 600px) {
+            button {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>流动儿童知识问答</h1>
+    <div id="game" class="question-box">
+        <div id="question" class="question"></div>
+        <ul id="options" class="options"></ul>
+        <button id="next" class="next-button">下一题</button>
+    </div>
+    <div id="result" class="question-box" style="display: none;">
+        <h2>游戏结束！</h2>
+        <p>你的得分是 <span id="score"></span> / 10</p>
+        <button onclick="startGame()">重新开始</button>
+    </div>
+    <script>
+        const questions = [
+            {
+                question: "什么是流动儿童？",
+                options: ["城市中的儿童", "农村中的儿童", "随父母到城市打工的儿童", "孤儿"],
+                answer: 2
+            },
+            {
+                question: "流动儿童面临的主要问题有哪些？",
+                options: ["教育问题", "健康问题", "心理问题", "以上都是"],
+                answer: 3
+            },
+            {
+                question: "流动儿童通常来自哪里？",
+                options: ["城市", "农村", "国外", "沿海地区"],
+                answer: 1
+            },
+            {
+                question: "以下哪项政策旨在帮助流动儿童？",
+                options: ["免费午餐计划", "教育公平政策", "环境保护政策", "就业促进政策"],
+                answer: 1
+            },
+            {
+                question: "流动儿童的主要身份特征是？",
+                options: ["户籍不在现居地", "没有身份证", "孤儿", "以上都是"],
+                answer: 0
+            },
+            {
+                question: "流动儿童教育的主要挑战是什么？",
+                options: ["师资不足", "教学设施差", "户籍限制", "以上都是"],
+                answer: 2
+            },
+            {
+                question: "流动儿童的父母通常从事什么工作？",
+                options: ["办公室工作", "工厂工作", "农民", "以上都是"],
+                answer: 1
+            },
+            {
+                question: "以下哪种措施有助于改善流动儿童的处境？",
+                options: ["加强心理辅导", "提供优质教育资源", "改善生活条件", "以上都是"],
+                answer: 3
+            },
+            {
+                question: "流动儿童在城市中面临的最大社会障碍是什么？",
+                options: ["语言障碍", "文化差异", "经济贫困", "户籍制度"],
+                answer: 3
+            },
+            {
+                question: "流动儿童的心理健康状况常常受到哪些因素影响？",
+                options: ["家庭环境", "学校教育", "社会支持", "以上都是"],
+                answer: 3
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+            const nextButton = document.getElementById('next');
+
+            questionElement.textContent = questions[currentQuestionIndex].question;
+            optionsElement.innerHTML = '';
+
+            questions[currentQuestionIndex].options.forEach((option, index) => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(index);
+                li.appendChild(button);
+                optionsElement.appendChild(li);
+            });
+
+            nextButton.style.display = 'none';
+        }
+
+        function checkAnswer(selectedIndex) {
+            const isCorrect = selectedIndex === questions[currentQuestionIndex].answer;
+            const options = document.querySelectorAll('#options button');
+            options.forEach((button, index) => {
+                button.disabled = true;
+                if (index === questions[currentQuestionIndex].answer) {
+                    button.classList.add('correct');
+                } else {
+                    button.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+            }
+
+            document.getElementById('next').style.display = 'block';
+        }
+
+        document.getElementById('next').onclick = () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                endGame();
+            }
+        };
+
+        function endGame() {
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('score').textContent = score;
+            document.getElementById('result').style.display = 'block';
+        }
+
+        startGame();
+    </script>
+</body>
+
+</html>
