@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>跑酷游戏</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #87CEEB;
+        }
+
+        .start-button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .start-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>跑酷游戏</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <button class="start-button" id="startButton">开始游戏</button>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const startButton = document.getElementById('startButton');
+
+        let player = {
+            x: 50,
+            y: canvas.height - 60,
+            width: 50,
+            height: 50,
+            color: 'green',
+            dy: 0,
+            gravity: 0.6,
+            jump: -10,
+            grounded: true
+        };
+
+        let obstacles = [];
+        let frame = 0;
+        let score = 0;
+        let gameInterval;
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function updateObstacles() {
+            if (frame % 100 === 0) {
+                let height = Math.random() * 50 + 20;
+                obstacles.push({
+                    x: canvas.width,
+                    y: canvas.height - height,
+                    width: 20,
+                    height: height
+                });
+            }
+            obstacles.forEach(obstacle => {
+                obstacle.x -= 5;
+            });
+            obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+        }
+
+        function updatePlayer() {
+            player.y += player.dy;
+            if (player.y + player.height < canvas.height) {
+                player.dy += player.gravity;
+                player.grounded = false;
+            } else {
+                player.y = canvas.height - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+        }
+
+        function checkCollision() {
+            obstacles.forEach(obstacle => {
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    gameOver();
+                }
+            });
+        }
+
+        function gameLoop() {
+            frame++;
+            score++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            updatePlayer();
+            updateObstacles();
+            drawObstacles();
+            checkCollision();
+            displayScore();
+        }
+
+        function displayScore() {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`得分: ${score}`, 10, 30);
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            alert(`游戏结束! 你的得分是 ${score}`);
+            document.location.reload();
+        }
+
+        function startGame() {
+            startButton.style.display = 'none';
+            gameInterval = setInterval(gameLoop, 20);
+        }
+
+        function jump() {
+            if (player.grounded) {
+                player.dy = player.jump;
+                player.grounded = false;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                jump();
+            }
+        });
+
+        canvas.addEventListener('click', jump);
+
+        startButton.addEventListener('click', startGame);
+    </script>
+</body>
+
+</html>
