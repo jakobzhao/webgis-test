@@ -14,11 +14,32 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
             margin: 0;
             padding: 0;
             background-color: #f8f9fa;
             color: #333;
             scroll-behavior: smooth;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
         }
 
         .header {
@@ -63,19 +84,24 @@
 
         .main-content {
             padding-top: 100px;
-            /* To ensure content is not hidden behind fixed header */
             padding-bottom: 100px;
-            /* To ensure content is not hidden behind fixed footer */
         }
 
         .section {
-            padding: 50px 20px;
+            padding: 60px 20px;
             text-align: center;
+            background-color: #fff;
+            margin-bottom: 20px;
+            /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+            border-radius: 10px;
+        }
+
+        .section:nth-child(even) {
+            background-color: #f1f1f1;
         }
 
         .section h1,
         .section h2 {
-            font-family: 'Montserrat', sans-serif;
             margin-bottom: 20px;
         }
 
@@ -103,7 +129,6 @@
         .responsive-iframe {
             width: 100%;
             height: 922px;
-            /* Adjust based on the form content */
             border: 0;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -147,17 +172,19 @@
             }
         }
 
-        .btn-group .btn {
+        .btn {
             background-color: #ff99cc;
             border-color: #ff99cc;
             color: #fff;
-            margin: 5px;
-            padding: 10px 20px;
+            margin: 10px;
+            padding: 15px 30px;
             border-radius: 50px;
             transition: background-color 0.3s, transform 0.3s;
+            font-size: 1rem;
+            text-transform: uppercase;
         }
 
-        .btn-group .btn:hover {
+        .btn:hover {
             background-color: #e68aab;
             border-color: #e68aab;
             transform: translateY(-3px);
@@ -168,12 +195,6 @@
             flex-direction: column;
         }
 
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            /* Adjust this value as needed */
-        }
-
         .card-body {
             flex-grow: 1;
             display: flex;
@@ -182,10 +203,14 @@
 
         .card:hover {
             transform: translateY(-10px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
         }
 
         .card h3 {
             font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
         }
 
         .help-section ul {
@@ -217,9 +242,10 @@
             max-width: 100%;
             height: auto;
             margin: 20px 0;
+            border-radius: 10px;
+            /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
         }
 
-        /* Map container styles */
         .map-container {
             width: 60%;
             margin: 0 auto;
@@ -232,8 +258,8 @@
         #map {
             width: 100%;
             height: 400px;
-            /* border-radius: 10px; */
-            /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         @media (max-width: 1024px) {
@@ -264,6 +290,19 @@
             height: 20px;
             display: block;
         }
+
+        .footer a {
+            color: #f8b0d9;
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #ff99cc;
+            text-decoration: underline;
+        }
     </style>
 
     <!-- Google tag (gtag.js) -->
@@ -282,7 +321,7 @@
     <div class="main-content">
 
         <div class="section bg-light" id="section1">
-            <h1 class="display-4">🎾 Advocate for Equality in Tennis</h1>
+            <h1 class="display-4">Advocate for Equality in Tennis</h1>
             <img src="Images/AceEquality.png" alt="Ace Equality" class="img-fluid mx-auto d-block"
                 style="max-width: 375px;">
             <div class="container mt-4">
@@ -297,7 +336,7 @@
         </div>
 
         <div class="section bg-white" id="section2">
-            <h2 class="display-4">🌟 About Us</h2>
+            <h2 class="display-4">🎾 About Us</h2>
             <div class="text-container">
                 <p class="lead">Welcome to Ace Equality, an initiative led by Siyuan Yang, a passionate high school
                     junior dedicated to championing equality for female tennis players. Our mission is to level the
@@ -315,26 +354,27 @@
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm h-100">
                             <div class="card-body d-flex flex-column">
-                                <h3 class="card-title"> Equal Opportunities</h3>
-                                <p class="card-text">We raise awareness of the inequalities for female tennis players
-                                    and advocate for an equal work environment.</p>
+                                <h3 class="card-title"><i class="fa fa-equals"></i> Equal Opportunities</h3>
+                                <p class="card-text">We raise awareness of the inequalities faced by female tennis
+                                    players and advocate for an equal work environment.</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm h-100">
                             <div class="card-body d-flex flex-column">
-                                <h3 class="card-title">Equal Paychecks</h3>
-                                <p class="card-text">We fight for women to be paid what they deserve.</p>
+                                <h3 class="card-title"><i class="fa fa-money-bill-wave"></i> Equal Paychecks</h3>
+                                <p class="card-text">We fight for women to be paid what they deserve, ensuring fair
+                                    compensation in the sports industry.</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm h-100">
                             <div class="card-body d-flex flex-column">
-                                <h3 class="card-title"> Fighting Stereotypes</h3>
+                                <h3 class="card-title"><i class="fa fa-fist-raised"></i> Fighting Stereotypes</h3>
                                 <p class="card-text">We educate against stereotypes and misconceptions about female
-                                    athletes.</p>
+                                    athletes, promoting a more inclusive sports culture.</p>
                             </div>
                         </div>
                     </div>
@@ -343,18 +383,17 @@
         </div>
 
         <div class="section bg-light" id="section5">
-            <h2 class="display-4">📰 News and Announcements</h2>
+            <h2 class="display-4">🌟 News and Announcements</h2>
             <div class="text-container">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm h-100">
                             <div class="card-body d-flex flex-column">
-                                <h3 class="card-title">Billie Jean King on her legendary career and fight for equal pay
-                                    in women’s sports</h3>
-                                <p class="card-text">Marking 50 years since the U.S. Open became the first major
-                                    sporting event to offer equal prize money for men and women, King reflects on the
-                                    significant progress made and the challenges that remain. Her efforts have paved the
-                                    way for many women athletes today, highlighting her enduring influence and
+                                <h3 class="card-title">Billie Jean King: Legendary Career and Fight for Equal Pay</h3>
+                                <p class="card-text">Marking 50 years since the U.S. Open offered equal prize money for
+                                    men and women, King reflects on the progress and
+                                    challenges that remain. Her efforts paved the way for women athletes today,
+                                    highlighting her enduring influence and
                                     commitment to equality in sports.</p>
                             </div>
                         </div>
@@ -362,26 +401,25 @@
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm h-100">
                             <div class="card-body d-flex flex-column">
-                                <h3 class="card-title">Women that changed sport: Billie Jean King keeps serving up
-                                    change - in tennis and beyond</h3>
+                                <h3 class="card-title">Billie Jean King: Serving Change in Tennis and Beyond</h3>
                                 <p class="card-text">The pioneering tennis star has used her platform to advocate for
-                                    female sports and women’s rights for over 50 years. She secured equal pay in tennis,
-                                    founded the Women’s Tennis Association, and continues to inspire by supporting
-                                    various women’s sports initiatives. King’s enduring legacy showcases her impact as a
-                                    tireless advocate for equality in sports and society.</p>
+                                    female sports and women’s rights for over 50 years. She
+                                    secured equal pay in tennis, founded the Women's Tennis Association, and continues
+                                    to inspire by supporting women’s
+                                    sports initiatives, showcasing her impact as an advocate for equality.</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card mb-4 shadow-sm h-100">
                             <div class="card-body d-flex flex-column">
-                                <h3 class="card-title">'You can't beat the truth': Venus Williams recalls fight for
-                                    equal pay</h3>
+                                <h3 class="card-title">Venus Williams: Recalling Her Fight for Equal Pay</h3>
                                 <p class="card-text">Venus Williams reflects on her fight for equal pay in women’s
-                                    tennis, starting with a pivotal 2005 speech to the Grand Slam Committee and leading
-                                    to Wimbledon awarding equal prize money in 2007. She highlights the influence of her
-                                    mother’s teachings on justice and the importance of persistence. Her efforts
-                                    continue to inspire the push for equality in sports.</p>
+                                    tennis, starting with a pivotal 2005 speech to the Grand
+                                    Slam Committee and leading to Wimbledon awarding equal prize money in 2007. She
+                                    highlights the influence of her mother’s
+                                    teachings on justice and the importance of persistence, continuing to inspire the
+                                    push for equality in sports.</p>
                             </div>
                         </div>
                     </div>
@@ -403,22 +441,36 @@
             <div class="text-container help-section">
                 <h3>Raise Awareness</h3>
                 <ul>
-                    <li>Social Media: <span>Share posts highlighting issues and achievements of female tennis
-                            players.</span></li>
-                    <li>Blog/Vlog: <span>Create content discussing gender inequality in tennis.</span></li>
-                    <li>Public Speaking: <span>Participate in or organize events about gender equality in sports.</span>
-                    </li>
+                    <li>Social Media: <span>Share posts highlighting issues and achievements of female tennis players.
+                            Engage with
+                            followers to spread the message further.</span></li>
+                    <li>Blog/Vlog: <span>Create content discussing gender inequality in tennis. Share stories and
+                            interviews to inspire
+                            change.</span></li>
+                    <li>Public Speaking: <span>Participate in or organize events about gender equality in sports. Speak
+                            up and encourage
+                            others to join the cause.</span></li>
                 </ul>
                 <h3>Support Female Players</h3>
                 <ul>
-                    <li>Attend Matches: <span>Support by attending their matches and tournaments.</span></li>
-                    <li>Promote Athletes: <span>Celebrate and share their achievements.</span></li>
-                    <li>Engage with Media: <span>Encourage sports media to provide equal coverage.</span></li>
+                    <li>Attend Matches: <span>Support by attending their matches and tournaments. Show your presence and
+                            cheer for
+                            female athletes.</span></li>
+                    <li>Promote Athletes: <span>Celebrate and share their achievements. Use your platform to highlight
+                            their
+                            successes.</span></li>
+                    <li>Engage with Media: <span>Encourage sports media to provide equal coverage. Push for fair
+                            representation of
+                            female athletes.</span></li>
                 </ul>
                 <h3>Support Equal Opportunities</h3>
                 <ul>
-                    <li>Donate: <span>Contribute to initiatives promoting gender equality in sports.</span></li>
-                    <li>Mentorship: <span>Guide and support young female athletes.</span></li>
+                    <li>Donate: <span>Contribute to initiatives promoting gender equality in sports. Your support can
+                            make a significant
+                            impact.</span></li>
+                    <li>Mentorship: <span>Guide and support young female athletes. Offer your experience and resources
+                            to help them
+                            grow.</span></li>
                 </ul>
             </div>
         </div>
@@ -431,7 +483,7 @@
         </div>
 
         <div class="section bg-light" id="section8">
-            <h2 class="display-4">📧 Contact Us</h2>
+            <h2 class="display-4">📧 How to Contact Us</h2>
             <div class="text-container">
                 <p class="lead">We’d love to hear from you! Whether you have questions, suggestions, or need assistance,
                     feel free to reach out. You can contact us via email. Our team is here to help and will get back to
@@ -467,7 +519,9 @@
         // Initialize map with Leaflet
         var map = L.map('map').setView([0, 0], 1);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png').addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
         // Define the custom HTML icon
         var pinkIcon = L.divIcon({
@@ -490,7 +544,6 @@
                 .bindPopup(location.description)
                 .openPopup();
         });
-
 
         // Scrollama setup
         var scroller = scrollama();
