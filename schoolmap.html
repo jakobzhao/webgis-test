@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>School Levels Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .legend {
+            background: white;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px;
+        }
+
+        .legend div {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend div span {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div class="legend">
+        <h4>School Levels</h4>
+        <div><span style="background: #FF0000;"></span>1. 市重点</div>
+        <div><span style="background: #FFA500;"></span>2. 区重点</div>
+        <div><span style="background: #FFFF00;"></span>3. 二类学校（一般种类）</div>
+        <div><span style="background: #00FF00;"></span>4. 较差学校</div>
+        <div><span style="background: #0000FF;"></span>5. 很差学校</div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [116.4074, 39.9042],
+            zoom: 11
+        });
+
+        map.on('load', () => {
+            fetch('schools.csv')
+                .then(response => response.text())
+                .then(csv => {
+                    const data = csv.split('\n').slice(1).map(row => row.split(','));
+                    data.forEach(school => {
+                        const [county, level, name, address, lat, lng, postcode] = school;
+                        const color = getColorByLevel(level);
+                        new maplibregl.Marker({ color })
+                            .setLngLat([parseFloat(lng), parseFloat(lat)])
+                            .addTo(map);
+                    });
+                });
+        });
+
+        function getColorByLevel(level) {
+            switch (level.trim()) {
+                case '1': return '#FF0000';
+                case '2': return '#FFA500';
+                case '3': return '#FFFF00';
+                case '4': return '#00FF00';
+                case '5': return '#0000FF';
+                default: return '#000000';
+            }
+        }
+    </script>
+</body>
+
+</html>

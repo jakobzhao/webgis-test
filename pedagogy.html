@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusive Pedagogy for Migrant Children</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .section {
+            padding: 60px 0;
+        }
+
+        .placeholder-image {
+            width: 100%;
+            height: 200px;
+            background-color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .scroll-section {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="text-center mb-5">
+            <h1>Inclusive Pedagogy for Migrant Children</h1>
+        </div>
+
+        <div class="section" id="section1">
+            <h2>Inclusive Content</h2>
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <div class="placeholder-image" id="image1"></div>
+                    <h3>Multicultural Curriculum</h3>
+                    <p>Include histories, literature, arts, and perspectives from the diverse cultural backgrounds of
+                        migrant students.</p>
+                    <p>Teach about the cultures, traditions, and experiences of different migrant communities.</p>
+                    <p>Incorporate multilingual resources and encourage students to share their linguistic abilities.
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="placeholder-image" id="image2"></div>
+                    <h3>Career and Life Skills</h3>
+                    <p>Integrate career exploration and workforce readiness activities tailored to the diverse
+                        aspirations and backgrounds of migrant students.</p>
+                    <p>Teach practical life skills, such as financial literacy, digital literacy, and navigating local
+                        systems and institutions.</p>
+                    <p>Collaborate with local organizations to offer internships, apprenticeships, and job placement
+                        support for migrant youth.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="placeholder-image" id="image3"></div>
+                    <h3>Social-Emotional Learning</h3>
+                    <p>Provide support for the unique social-emotional needs of migrant children, such as managing
+                        trauma, building resilience, and navigating cultural adjustments.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section2">
+            <h2>Inclusive Activities</h2>
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <div class="placeholder-image" id="image4"></div>
+                    <h3>Sharing New Regarding Hometowns</h3>
+                    <p>Enhance the migrant children's connection with hometown.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="placeholder-image" id="image5"></div>
+                    <h3>Creating Class Hometown Maps</h3>
+                    <p>Reinforce the sense of belonging of migrant children.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="placeholder-image" id="image6"></div>
+                    <h3>Accent Appreciation</h3>
+                    <p>Educate all students, staff, and families about the value of linguistic diversity.</p>
+                    <p>Dispel myths and misconceptions about accents being "right" or "wrong."</p>
+                    <p>Encourage students to share their linguistic backgrounds and accent stories.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section3">
+            <h2>Through Social Media</h2>
+            <div class="text-center">
+                <div class="placeholder-image" id="image7"></div>
+                <p>Maintain connections with their hometown.</p>
+                <p>Express their personal identities, reveals the complexity of building family identity in an
+                    ever-changing environment.</p>
+                <p>Implication of education for migrant children.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/scrollama"></script>
+    <script>
+        // Initialize Scrollama
+        var scroller = scrollama();
+
+        scroller
+            .setup({
+                step: '.section',
+                offset: 0.5,
+                debug: false
+            })
+            .onStepEnter(response => {
+                // Handle step enter
+                console.log(response);
+            })
+            .onStepExit(response => {
+                // Handle step exit
+                console.log(response);
+            });
+    </script>
+</body>
+
+</html>
