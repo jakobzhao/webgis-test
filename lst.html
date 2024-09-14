@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landsat 8 Temperature Map</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Landsat 8 Temperature Map</h1>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([47.550, -122.400], 12); // Centered on West Seattle
+
+        // Add a base layer (optional)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add the Landsat 8 temperature layer from Google Earth Engine
+        var landsatLayer = L.tileLayer('https://earthengine.googleapis.com/v1/projects/ee-jakobzhao/maps/71b92c20697a74ba08c274e8ad066561-633dce686d56e2dd1b2e6a78cb523cee/tiles/{z}/{x}/{y}', {
+            attribution: '&copy; Earth Engine'
+        }).addTo(map);
+    </script>
+</body>
+
+</html>
