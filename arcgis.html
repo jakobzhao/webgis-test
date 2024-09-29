@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcGIS JavaScript API Map with GeoJSON Layer</title>
+    <!-- 加载 ArcGIS JavaScript API -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.27/"></script>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 用于展示地图的 div -->
+    <div id="viewDiv"></div>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/GeoJSONLayer"
+        ], function (Map, MapView, GeoJSONLayer) {
+
+            // 创建一个地图实例
+            const map = new Map({
+                basemap: "streets-navigation-vector" // 设置底图样式
+            });
+
+            // 创建一个 MapView 实例，绑定到 viewDiv
+            const view = new MapView({
+                container: "viewDiv",  // 绑定到 HTML 中的 viewDiv
+                map: map,  // 设置地图对象
+                center: [116.4074, 39.9042],  // 北京的经纬度
+                zoom: 10  // 缩放级别
+            });
+
+            // GeoJSON 数据的 URL 示例
+            const geojsonUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
+
+            // 创建一个 GeoJSON 图层
+            const geojsonLayer = new GeoJSONLayer({
+                url: geojsonUrl,
+                popupTemplate: {
+                    title: "{place}", // 弹窗显示的属性字段
+                    content: "Magnitude: {mag}" // 弹窗显示的内容
+                },
+                renderer: {
+                    type: "simple", // 使用简单的渲染器
+                    symbol: {
+                        type: "simple-marker", // 显示为点符号
+                        color: "orange",
+                        outline: {
+                            color: "white"
+                        }
+                    }
+                }
+            });
+
+            // 将 GeoJSON 图层添加到地图
+            map.add(geojsonLayer);
+        });
+    </script>
+</body>
+
+</html>
