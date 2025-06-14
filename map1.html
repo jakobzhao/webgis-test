@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Seattle Coffee Shops - Distance Colored</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        #welcome-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            max-width: 400px;
+            text-align: center;
+            font-family: sans-serif;
+        }
+
+        #hide-button {
+            margin-top: 12px;
+            padding: 6px 12px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #hide-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <!-- Welcome Panel -->
+    <div id="welcome-panel">
+        <h2>Welcome to Seattle Coffee Explorer</h2>
+        <p>This interactive map shows Seattle coffee shops, with dot color based on distance from downtown. Click any
+            shop to see details.</p>
+        <button id="hide-button">Hide Welcome</button>
+    </div>
+
+    <script>
+        const seattleCenter = [-122.3321, 47.6062];
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+            center: seattleCenter,
+            zoom: 12
+        });
+
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+        document.getElementById('hide-button').addEventListener('click', () => {
+            document.getElementById('welcome-panel').style.display = 'none';
+        });
+
+        async function loadAndRenderData() {
+            const response = await fetch('./seattle_coffee.geojson');
+            const geojson = await response.json();
+
+            geojson.features.forEach(feature => {
+                const distance = turf.distance(turf.point(seattleCenter), turf.point(feature.geometry.coordinates), { units: 'kilometers' });
+                feature.properties.distance_km = distance;
+            });
+
+            map.addSource('coffee-shops', {
+                type: 'geojson',
+                data: geojson
+            });
+
+            map.addLayer({
+                id: 'coffee-shop-points',
+                type: 'circle',
+                source: 'coffee-shops',
+                paint: {
+                    'circle-radius': 6,
+                    'circle-color': [
+                        'interpolate', ['linear'], ['get', 'distance_km'],
+                        0, '#e74c3c',
+                        2, '#f39c12',
+                        4, '#27ae60',
+                        6, '#2980b9',
+                        8, '#8e44ad'
+                    ],
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#ffffff'
+                }
+            });
+
+            map.addLayer({
+                id: 'coffee-shop-labels',
+                type: 'symbol',
+                source: 'coffee-shops',
+                layout: {
+                    'text-field': ['get', 'name'],
+                    'text-font': ['Open Sans Regular'],
+                    'text-size': 12,
+                    'text-offset': [0, 1.2],
+                    'text-anchor': 'top'
+                },
+                paint: {
+                    'text-color': '#333'
+                }
+            });
+
+            map.on('click', 'coffee-shop-points', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const name = e.features[0].properties.name || 'Unnamed Coffee Shop';
+                const dist = e.features[0].properties.distance_km.toFixed(2);
+
+                new maplibregl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`<strong>${name}</strong><br>Distance to center: ${dist} km`)
+                    .addTo(map);
+            });
+
+            map.on('mouseenter', 'coffee-shop-points', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', 'coffee-shop-points', () => {
+                map.getCanvas().style.cursor = '';
+            });
+        }
+
+        map.on('load', loadAndRenderData);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Rider Game with Fairness</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+        }
+
+        #startButton {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+        }
+
+        #startButton:hover {
+            background-color: darkgreen;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="startButton">Start Game</button>
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
+    <div class="info">
+        <p>Use Arrow Keys to move the rider. Avoid cars and deliver packages to customers.</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const screenWidth = canvas.width;
+        const screenHeight = canvas.height;
+
+        // Game parameters
+        const gridSize = 4;
+        const blockSize = 110;
+        const blockPadding = 45;
+        const riderSpeed = 5;
+        const taskTimeLimit = 30;
+        let score = 0;
+        let gameStarted = false;
+        let carriedPackage = null;
+        let remainingTime = taskTimeLimit;
+        const algorithmBiasPenalty = 5;
+
+        // Define colors
+        const COLORS = {
+            black: '#000000',
+            white: '#FFFFFF',
+            red: '#FF0000',
+            green: '#00FF00',
+            blue: '#0000FF'
+        };
+
+        // Rider object
+        const rider = {
+            x: screenWidth / 2 - 25,
+            y: screenHeight - 100,
+            width: 50,
+            height: 50,
+            color: COLORS.green
+        };
+
+        // Customers, packages, and cars
+        const customers = [];
+        const packages = [];
+        const cars = [];
+
+        function generateObjects() {
+            for (let i = 0; i < 8; i++) {
+                let customerPosition;
+                let packagePosition;
+
+                do {
+                    customerPosition = getRandomGridBlockPosition();
+                    packagePosition = getRandomGridBlockPosition();
+                } while (
+                    positionsOverlap(customerPosition, packagePosition) ||
+                    customers.some(c => positionsOverlap(customerPosition, c)) ||
+                    packages.some(p => positionsOverlap(packagePosition, p))
+                );
+
+                customers.push({ x: customerPosition.x, y: customerPosition.y, width: 50, height: 50, color: COLORS.red, number: i + 1 });
+                packages.push({ x: packagePosition.x, y: packagePosition.y, width: 40, height: 20, color: COLORS.black, number: i + 1 });
+            }
+
+            for (let i = 0; i < 3; i++) {
+                let carPosition;
+                do {
+                    carPosition = getRandomGridBlockPosition();
+                } while (
+                    customers.some(c => positionsOverlap(carPosition, c)) ||
+                    packages.some(p => positionsOverlap(carPosition, p)) ||
+                    cars.some(car => positionsOverlap(carPosition, car))
+                );
+
+                cars.push({ x: carPosition.x, y: carPosition.y, width: 40, height: 20, color: COLORS.blue, speed: 2 });
+            }
+        }
+
+        function getRandomGridBlockPosition() {
+            const blockIndex = Math.floor(Math.random() * (gridSize * gridSize));
+            const blockX = blockIndex % gridSize;
+            const blockY = Math.floor(blockIndex / gridSize);
+            const x = blockX * (blockSize + blockPadding) + blockSize / 2;
+            const y = blockY * (blockSize + blockPadding) + blockSize / 2;
+            return { x, y, blockIndex };
+        }
+
+        function positionsOverlap(pos1, pos2) {
+            return (
+                Math.abs(pos1.x - pos2.x) < 50 &&
+                Math.abs(pos1.y - pos2.y) < 50
+            );
+        }
+
+        // Render rider
+        function drawRider() {
+            ctx.fillStyle = rider.color;
+            ctx.fillRect(rider.x, rider.y, rider.width, rider.height);
+            ctx.fillStyle = COLORS.white;
+            ctx.font = '14px Arial';
+            ctx.fillText('骑手', rider.x + 5, rider.y + rider.height / 2);
+        }
+
+        // Render customers
+        function drawCustomers() {
+            customers.forEach(customer => {
+                ctx.fillStyle = customer.color;
+                ctx.fillRect(customer.x, customer.y, customer.width, customer.height);
+                ctx.fillStyle = COLORS.white;
+                ctx.font = '12px Arial';
+                ctx.fillText(`客户${customer.number}`, customer.x + 5, customer.y + customer.height / 2);
+            });
+        }
+
+        // Render packages
+        function drawPackages() {
+            packages.forEach(pkg => {
+                ctx.fillStyle = pkg.color;
+                ctx.fillRect(pkg.x, pkg.y, pkg.width, pkg.height);
+                ctx.fillStyle = COLORS.white;
+                ctx.font = '12px Arial';
+                ctx.fillText(`包裹${pkg.number}`, pkg.x + 5, pkg.y + pkg.height / 2);
+            });
+        }
+
+        // Render cars
+        function drawCars() {
+            cars.forEach((car, index) => {
+                ctx.fillStyle = car.color;
+                ctx.fillRect(car.x, car.y, car.width, car.height);
+                ctx.fillStyle = COLORS.white;
+                ctx.font = '12px Arial';
+                ctx.fillText(`车${index + 1}`, car.x + 5, car.y + car.height / 2);
+            });
+        }
+
+        function updateCars() {
+            cars.forEach(car => {
+                if (car.speed > 0) {
+                    car.x += car.speed;
+                } else {
+                    car.y += car.speed;
+                }
+
+                if (car.x + car.width > screenWidth || car.x < 0) {
+                    car.speed = -car.speed;
+                }
+
+                if (car.y + car.height > screenHeight || car.y < 0) {
+                    car.speed = -car.speed;
+                }
+            });
+        }
+
+        function checkCarCollision() {
+            cars.forEach(car => {
+                if (
+                    rider.x < car.x + car.width &&
+                    rider.x + rider.width > car.x &&
+                    rider.y < car.y + car.height &&
+                    rider.y + rider.height > car.y
+                ) {
+                    score -= 10;
+                    alert('您撞到了车辆，扣 10 分！');
+
+                    rider.x = screenWidth / 2 - 25;
+                    rider.y = screenHeight - 100;
+
+                    let newPosition;
+                    do {
+                        newPosition = getRandomGridBlockPosition();
+                    } while (
+                        customers.some(c => positionsOverlap(newPosition, c)) ||
+                        packages.some(p => positionsOverlap(newPosition, p)) ||
+                        cars.some(c => positionsOverlap(newPosition, c))
+                    );
+
+                    car.x = newPosition.x;
+                    car.y = newPosition.y;
+                }
+            });
+        }
+
+        // Render score and timer
+        function drawScore() {
+            ctx.fillStyle = COLORS.black;
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 20);
+            ctx.fillText(`Time Left: ${remainingTime.toFixed(2)}s`, 10, 50);
+        }
+
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            keys[e.key] = false;
+        });
+
+        // Update rider position based on arrow key inputs
+        function updateRiderPosition() {
+            if (keys['ArrowLeft'] && rider.x > blockPadding / 2) rider.x -= riderSpeed;
+            if (keys['ArrowRight'] && rider.x + rider.width < screenWidth - blockPadding / 2) rider.x += riderSpeed;
+            if (keys['ArrowUp'] && rider.y > blockPadding / 2) rider.y -= riderSpeed;
+            if (keys['ArrowDown'] && rider.y + rider.height < screenHeight - blockPadding / 2) rider.y += riderSpeed;
+        }
+
+        // Ensure cars stay within their designated grid block
+        function updateCars() {
+            cars.forEach(car => {
+                car.x += car.speed;
+
+                // Reverse direction if car hits the boundary of its block
+                const blockX = Math.floor(car.x / (blockSize + blockPadding));
+                const blockY = Math.floor(car.y / (blockSize + blockPadding));
+                const blockLeft = blockX * (blockSize + blockPadding);
+                const blockTop = blockY * (blockSize + blockPadding);
+
+                if (car.x < blockLeft || car.x + car.width > blockLeft + blockSize) {
+                    car.speed = -car.speed;
+                }
+
+                if (car.y < blockTop || car.y + car.height > blockTop + blockSize) {
+                    car.speed = -car.speed;
+                }
+            });
+        }
+
+        function checkCarCollision() {
+            cars.forEach(car => {
+                if (
+                    rider.x < car.x + car.width &&
+                    rider.x + rider.width > car.x &&
+                    rider.y < car.y + car.height &&
+                    rider.y + rider.height > car.y
+                ) {
+                    score -= 10;
+                    alert('您撞到了车辆，扣 10 分！');
+
+                    rider.x = screenWidth / 2 - 25;
+                    rider.y = screenHeight - 100;
+
+                    let newPosition;
+                    do {
+                        newPosition = getRandomGridBlockPosition();
+                    } while (
+                        customers.some(c => positionsOverlap(newPosition, c)) ||
+                        packages.some(p => positionsOverlap(newPosition, p)) ||
+                        cars.some(c => positionsOverlap(newPosition, c))
+                    );
+
+                    car.x = newPosition.x;
+                    car.y = newPosition.y;
+                }
+            });
+        }
+
+        function checkPackagePickup() {
+            packages.forEach((pkg, index) => {
+                if (
+                    rider.x < pkg.x + pkg.width &&
+                    rider.x + rider.width > pkg.x &&
+                    rider.y < pkg.y + pkg.height &&
+                    rider.y + rider.height > pkg.y
+                ) {
+                    carriedPackage = pkg;
+                    packages.splice(index, 1);
+                    remainingTime = taskTimeLimit;
+                }
+            });
+        }
+
+        function checkPackageDelivery() {
+            if (carriedPackage) {
+                customers.forEach((customer, index) => {
+                    if (
+                        rider.x < customer.x + customer.width &&
+                        rider.x + rider.width > customer.x &&
+                        rider.y < customer.y + customer.height &&
+                        rider.y + rider.height > customer.y &&
+                        carriedPackage.number === customer.number
+                    ) {
+                        score += 10 + Math.floor(remainingTime);
+                        carriedPackage = null;
+                        customers.splice(index, 1);
+                    }
+                });
+            }
+        }
+
+        // Main game loop
+        function gameLoop() {
+            if (!gameStarted) return;
+
+            ctx.clearRect(0, 0, screenWidth, screenHeight);
+
+            drawRider();
+            drawCustomers();
+            drawPackages();
+            drawCars();
+            drawScore();
+
+            updateRiderPosition();
+            updateCars();
+            checkCarCollision();
+            checkPackagePickup();
+            checkPackageDelivery();
+
+            remainingTime -= 1 / 60;
+
+            if (remainingTime <= 0) {
+                alert('Game Over!');
+                gameStarted = false;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            gameStarted = true;
+            score = 0;
+            carriedPackage = null;
+            customers.length = 0;
+            packages.length = 0;
+            cars.length = 0;
+            remainingTime = taskTimeLimit;
+            generateObjects();
+            gameLoop();
+        });
+
+    </script>
+</body>
+
+</html>

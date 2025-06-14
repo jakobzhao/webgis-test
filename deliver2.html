@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外卖游戏</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        #gameCanvas {
+            width: 500px;
+            height: 500px;
+            margin-top: 50px;
+            border: 2px solid black;
+            background-color: white;
+        }
+
+        #startButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #infoPanel {
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <button id="startButton">开始游戏</button>
+    <div id="infoPanel">
+        <p id="status">当前状态：等待开始</p>
+        <p id="score">得分：0</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const statusPanel = document.getElementById('status');
+        const scorePanel = document.getElementById('score');
+
+        const TILE_SIZE = 33;
+        const GRID_SIZE = 15;
+        let score = 0;
+        let hasPackage = null;
+        let gameStarted = false;
+        let deliveryTimes = [];
+        let carMoveInterval = 30; // Cars move every 30 frames
+        let carMoveCounter = 0;
+
+        const rider = { x: 0, y: 0, image: new Image() };
+        rider.image.src = 'Images/rider.png';
+
+        const packages = [
+            { x: 4, y: 4, image: new Image(), id: 1, delivered: false },
+            { x: 10, y: 10, image: new Image(), id: 2, delivered: false },
+            { x: 6, y: 15, image: new Image(), id: 3, delivered: false }
+        ];
+        packages.forEach(pack => pack.image.src = 'Images/package.png');
+
+        const customers = [
+            { x: 8, y: 8, image: new Image(), id: 1 },
+            { x: 15, y: 15, image: new Image(), id: 2 },
+            { x: 12, y: 5, image: new Image(), id: 3 }
+        ];
+        customers.forEach(customer => customer.image.src = 'Images/customer.png');
+
+        const doneImage = new Image();
+        doneImage.src = 'Images/done.png';
+
+        const cars = [
+            { x: 5, y: 5, dx: 1, dy: 0, image: new Image() },
+            { x: 12, y: 12, dx: 0, dy: 1, image: new Image() }
+        ];
+        cars.forEach(car => car.image.src = 'Images/car.png');
+
+        const map = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(1));
+
+        function drawMap() {
+            const offsetX = (canvas.width - TILE_SIZE * GRID_SIZE) / 2;
+            const offsetY = (canvas.height - TILE_SIZE * GRID_SIZE) / 2;
+
+            ctx.lineWidth = 1; // 设置线条宽度
+            ctx.strokeStyle = 'black'; // 设置线条颜色
+
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    const x = offsetX + col * TILE_SIZE;
+                    const y = offsetY + row * TILE_SIZE;
+
+                    ctx.fillStyle = map[row][col] === 1 ? 'white' : 'gray';
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+                }
+            }
+        }
+
+
+        function drawEntity(entity, text = '') {
+            const textOffsetX = TILE_SIZE - 10; // 右下角偏移量
+            const textOffsetY = TILE_SIZE - 5;
+            ctx.drawImage(
+                entity.image,
+                entity.x * TILE_SIZE,
+                entity.y * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE
+            );
+            if (text) {
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                ctx.font = '14px Arial';
+                ctx.strokeText(
+                    text,
+                    entity.x * TILE_SIZE + textOffsetX,
+                    entity.y * TILE_SIZE + textOffsetY
+                );
+                ctx.fillText(
+                    text,
+                    entity.x * TILE_SIZE + textOffsetX,
+                    entity.y * TILE_SIZE + textOffsetY
+                );
+            }
+        }
+
+        function moveCars() {
+            if (carMoveCounter < carMoveInterval) {
+                carMoveCounter++;
+                return;
+            }
+
+            cars.forEach(car => {
+                if (Math.random() > 0.5) {
+                    car.dx = car.dy === 0 ? 0 : (Math.random() > 0.5 ? 1 : -1);
+                    car.dy = car.dx === 0 ? (Math.random() > 0.5 ? 1 : -1) : 0;
+                }
+                car.x += car.dx;
+                car.y += car.dy;
+
+                if (car.x < 0 || car.x >= GRID_SIZE || car.y < 0 || car.y >= GRID_SIZE) {
+                    car.dx *= -1;
+                    car.dy *= -1;
+                    car.x += car.dx;
+                    car.y += car.dy;
+                }
+            });
+
+            carMoveCounter = 0;
+        }
+
+        function checkCollision() {
+            for (const pack of packages) {
+                if (!pack.delivered && rider.x === pack.x && rider.y === pack.y) {
+                    hasPackage = pack;
+                    pack.delivered = true;
+                    statusPanel.textContent = `当前状态：取到包裹 ${pack.id}`;
+                }
+            }
+
+            if (hasPackage) {
+                const customer = customers.find(c => c.id === hasPackage.id);
+                if (rider.x === customer.x && rider.y === customer.y) {
+                    const deliveryTime = Math.floor((performance.now() - gameStartTime) / 1000);
+                    const expectedTime = 20;
+                    const penalty = deliveryTime > expectedTime ? 5 : 0;
+                    const points = 10 - penalty;
+                    deliveryTimes.push({ id: hasPackage.id, time: deliveryTime, penalty, expectedTime });
+                    score += points;
+                    hasPackage = null;
+                    customer.image = doneImage;
+                    statusPanel.textContent = `当前状态：包裹 ${customer.id} 已送达`;
+                    scorePanel.textContent = `得分：${score}`;
+                }
+            }
+
+            for (const car of cars) {
+                if (rider.x === car.x && rider.y === car.y) {
+                    score -= 5;
+                    alert('撞到车辆！扣 5 分。');
+                    car.x = Math.floor(Math.random() * GRID_SIZE);
+                    car.y = Math.floor(Math.random() * GRID_SIZE);
+                }
+            }
+
+            if (packages.every(pack => pack.delivered && !hasPackage)) {
+                gameStarted = false;
+                const summary = deliveryTimes.map(d => `包裹 ${d.id}: 时间 ${d.time}s (预估 ${d.expectedTime}s), 扣分 -${d.penalty}
+原因: 超过预估时间`).join(' ');
+                alert(`游戏结束！\n总得分：${score}\n\n递送总结：\n${summary}`);
+                resetGame();
+            }
+        }
+
+        function calculateEstimatedTime(rider, target) {
+            return Math.abs(rider.x - target.x) + Math.abs(rider.y - target.y);
+        }
+
+        function resetGame() {
+            rider.x = 0;
+            rider.y = 0;
+            packages.forEach(pack => {
+                pack.x = Math.floor(Math.random() * GRID_SIZE);
+                pack.y = Math.floor(Math.random() * GRID_SIZE);
+                pack.delivered = false;
+            });
+            customers.forEach(customer => {
+                customer.x = Math.floor(Math.random() * GRID_SIZE);
+                customer.y = Math.floor(Math.random() * GRID_SIZE);
+                customer.image.src = 'Images/customer.png';
+            });
+            cars.forEach(car => {
+                car.x = Math.floor(Math.random() * GRID_SIZE);
+                car.y = Math.floor(Math.random() * GRID_SIZE);
+                car.dx = Math.random() > 0.5 ? 1 : -1;
+                car.dy = Math.random() > 0.5 ? 1 : -1;
+            });
+            hasPackage = null;
+            deliveryTimes = [];
+            score = 0;
+            carMoveCounter = 0;
+            statusPanel.textContent = '当前状态：等待开始';
+            const estimatedTimesInfo = packages.map(pack => {
+                const customer = customers.find(c => c.id === pack.id);
+                return `包裹 ${pack.id}: 预计送达时间 ${calculateEstimatedTime(rider, pack) + calculateEstimatedTime(pack, customer)} 秒`;
+            }).join('; ');
+            document.getElementById('infoPanel').insertAdjacentHTML('beforeend', `<p id='estimatedTimes'>${estimatedTimesInfo}</p>`);
+            scorePanel.textContent = '得分：0';
+        }
+
+        function update() {
+            if (!gameStarted) return;
+            moveCars();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMap();
+            customers.forEach(customer => drawEntity(customer, customer.id));
+            packages.forEach(pack => {
+                if (!pack.delivered) drawEntity(pack, pack.id);
+            });
+            cars.forEach(car => drawEntity(car));
+            drawEntity(rider);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            checkCollision();
+            if (gameStarted) requestAnimationFrame(gameLoop);
+        }
+
+        let gameStartTime;
+        document.addEventListener('keydown', (e) => {
+            if (!gameStarted) return;
+
+            let newX = rider.x;
+            let newY = rider.y;
+
+            if (e.key === 'ArrowUp') newY -= 1;
+            if (e.key === 'ArrowDown') newY += 1;
+            if (e.key === 'ArrowLeft') newX -= 1;
+            if (e.key === 'ArrowRight') newX += 1;
+
+            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE && map[newY][newX] === 1) {
+                rider.x = newX;
+                rider.y = newY;
+            }
+        });
+
+        startButton.addEventListener('click', () => {
+            const estimatedTimes = packages.map(pack => {
+                const customer = customers.find(c => c.id === pack.id);
+                return `包裹 ${pack.id}: 预计送达时间 ${calculateEstimatedTime(rider, pack) + calculateEstimatedTime(pack, customer)} 秒`;
+            }).join(' ');
+            alert('游戏玩法: \n 1. 使用方向键移动外卖员。\n 2. 避免撞到移动的车辆，否则会扣分。\n 3. 每次包裹预计送达时间由算法根据最短路径估计:' + estimatedTimes + '\n 4. 完成所有包裹递送后游戏结束。');
+            resetGame();
+            gameStartTime = performance.now();
+            gameStarted = true;
+            gameLoop();
+        });
+    </script>
+</body>
+
+</html>

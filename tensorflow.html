@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwritten Digit Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+            margin: 10px 0;
+            cursor: crosshair;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #result {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Draw a Digit</h1>
+    <canvas id="canvas" width="280" height="280"></canvas>
+    <button id="clear-btn">Clear</button>
+    <button id="predict-btn">Predict</button>
+    <p id="result">Prediction: <span id="prediction">Waiting...</span></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const clearBtn = document.getElementById('clear-btn');
+        const predictBtn = document.getElementById('predict-btn');
+        const predictionText = document.getElementById('prediction');
+
+        let isDrawing = false;
+
+        // Initialize drawing on canvas
+        canvas.addEventListener('mousedown', () => (isDrawing = true));
+        canvas.addEventListener('mouseup', () => (isDrawing = false));
+        canvas.addEventListener('mousemove', draw);
+
+        // Clear canvas
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            predictionText.textContent = 'Waiting...';
+        });
+
+        // Draw on canvas
+        function draw(event) {
+            if (!isDrawing) return;
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = 'black';
+
+            ctx.beginPath();
+            ctx.moveTo(event.offsetX, event.offsetY);
+            ctx.lineTo(event.offsetX, event.offsetY);
+            ctx.stroke();
+        }
+
+        // Load pretrained TensorFlow.js model
+        let model;
+        const MODEL_URL = 'https://storage.googleapis.com/tfhub-tfjs-models/mnist/model.json';
+
+        (async function loadModel() {
+            try {
+                predictionText.textContent = 'Loading model... Please wait.';
+                model = await tf.loadGraphModel(MODEL_URL);
+                predictionText.textContent = 'Model loaded. Ready to predict.';
+                console.log('Model loaded successfully.');
+            } catch (error) {
+                console.error('Failed to load model:', error);
+                predictionText.textContent = 'Error loading model.';
+            }
+        })();
+
+        // Predict the digit
+        predictBtn.addEventListener('click', async () => {
+            if (!model) {
+                alert('Model is still loading. Please wait a moment and try again.');
+                return;
+            }
+
+            // Get image data from canvas
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            // Preprocess image data
+            try {
+                const input = tf.browser
+                    .fromPixels(imageData, 1)
+                    .resizeNearestNeighbor([28, 28]) // Resize to 28x28
+                    .mean(2) // Convert to grayscale
+                    .toFloat()
+                    .div(tf.scalar(255)) // Normalize
+                    .expandDims(0); // Add batch dimension
+
+                // Predict digit
+                const prediction = model.predict(input);
+                const predictedDigit = prediction.argMax(1).dataSync()[0];
+                predictionText.textContent = predictedDigit;
+                console.log('Prediction:', predictedDigit);
+            } catch (error) {
+                console.error('Prediction error:', error);
+                predictionText.textContent = 'Error during prediction.';
+            }
+        });
+    </script>
+</body>
+
+</html>

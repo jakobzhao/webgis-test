@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Rider Game</title>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid black;
+        }
+
+        #startButton {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+        }
+
+        #startButton:hover {
+            background-color: darkgreen;
+        }
+
+        .rules {
+            width: 80%;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        .legend {
+            width: 80%;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #000;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="startButton">Start Game</button>
+    <canvas id="gameCanvas"></canvas>
+    <div class="legend">
+        <h3>图例</h3>
+        <p><strong>绿色方块：</strong>骑手</p>
+        <p><strong>红色方块：</strong>客户</p>
+        <p><strong>黑色长条：</strong>包裹</p>
+        <p><strong>灰色区域：</strong>不可通行区域</p>
+        <p><strong>白色区域：</strong>可通行道路</p>
+    </div>
+    <div class="rules">
+        <h3>游戏规则</h3>
+        <ul>
+            <li><strong>目标：</strong>驾驶骑手在规定时间内完成包裹的拾取和配送任务。</li>
+            <li><strong>骑手移动：</strong>使用箭头键控制骑手只能在白色道路上移动，避开灰色不可通行区域。</li>
+            <li><strong>拾取包裹：</strong>靠近黑色长条（包裹）并接触后自动拾取。</li>
+            <li><strong>配送任务：</strong>将包裹送到对应红色方块（客户）处，完成后得分。</li>
+            <li><strong>时间限制：</strong>每次任务有固定时间限制，超时将扣分。</li>
+            <li><strong>注意：</strong>算法可能会随机施加偏见，例如扣分，玩家需快速完成任务以获得高分。</li>
+            <li><strong>得分规则：</strong>每次成功配送包裹得分10分，超时或算法偏见可能扣分。</li>
+        </ul>
+    </div>
+
+    <script>
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const screenWidth = 800;
+        const screenHeight = 800;
+        canvas.width = screenWidth;
+        canvas.height = screenHeight;
+
+        // 游戏参数
+        const riderSpeed = 5;
+        const gridSize = 4;
+        const blockSize = 110;
+        const blockPadding = 45;
+        const taskTimeLimit = 30; // 每单任务的时间限制（秒）
+        let score = 0;
+        let gameStarted = false;
+        let carriedPackage = null;
+        let remainingTime = taskTimeLimit;
+
+        const algorithmBiasPenalty = 5; // 算法偏见带来的分数惩罚
+
+        // 定义颜色
+        const COLORS = {
+            black: '#000000',
+            white: '#FFFFFF',
+            gray: '#808080',
+            red: '#FF0000',
+            green: '#00FF00',
+            blue: '#0000FF'
+        };
+
+        // 骑手对象
+        const rider = {
+            x: screenWidth / 2 - 25,
+            y: screenHeight - 100,
+            width: 50,
+            height: 50,
+            color: COLORS.green
+        };
+
+        // 客户和包裹
+        const customers = [];
+        const packages = [];
+
+        // 生成客户和包裹
+        function generateObjects() {
+            for (let i = 0; i < 8; i++) {
+                let customerPosition;
+                let packagePosition;
+
+                // 确保客户和包裹在不同的 block
+                do {
+                    customerPosition = getRandomGridBlockPosition();
+                    packagePosition = getRandomGridBlockPosition();
+                } while (customerPosition.blockIndex === packagePosition.blockIndex);
+
+                customers.push({ x: customerPosition.x, y: customerPosition.y, width: 50, height: 50, color: COLORS.red, number: i + 1 });
+                packages.push({ x: packagePosition.x, y: packagePosition.y, width: 40, height: 20, color: COLORS.black, number: i + 1 });
+            }
+        }
+
+        function getRandomGridBlockPosition() {
+            const blockIndex = Math.floor(Math.random() * (gridSize * gridSize));
+            const blockX = blockIndex % gridSize;
+            const blockY = Math.floor(blockIndex / gridSize);
+            const x = blockX * (blockSize + blockPadding) + blockSize / 2;
+            const y = blockY * (blockSize + blockPadding) + blockSize / 2;
+            return { x, y, blockIndex };
+        }
+
+        // 渲染背景
+        function drawBackground() {
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const x = j * (blockSize + blockPadding);
+                    const y = i * (blockSize + blockPadding);
+
+                    // 绘制灰色块（不可通行区域）
+                    ctx.fillStyle = COLORS.gray;
+                    ctx.fillRect(x, y, blockSize, blockSize);
+
+                    // 绘制白色道路
+                    ctx.fillStyle = COLORS.white;
+                    ctx.fillRect(x + blockPadding / 2, y + blockPadding / 2, blockSize - blockPadding, blockSize - blockPadding);
+                }
+            }
+        }
+
+        // 渲染对象
+        function drawRider() {
+            ctx.fillStyle = rider.color;
+            ctx.fillRect(rider.x, rider.y, rider.width, rider.height);
+        }
+
+        function drawCustomers() {
+            customers.forEach(customer => {
+                ctx.fillStyle = customer.color;
+                ctx.fillRect(customer.x, customer.y, customer.width, customer.height);
+            });
+        }
+
+        function drawPackages() {
+            packages.forEach(pkg => {
+                ctx.fillStyle = pkg.color;
+                ctx.fillRect(pkg.x, pkg.y, pkg.width, pkg.height);
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = COLORS.black;
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 20);
+            ctx.fillText(`Time Left: ${remainingTime.toFixed(2)}s`, 10, 50);
+        }
+
+        // 显示游戏结束
+        function showGameOver() {
+            ctx.fillStyle = COLORS.white;
+            ctx.fillRect(0, 0, screenWidth, screenHeight);
+            ctx.fillStyle = COLORS.red;
+            ctx.font = '48px Arial';
+            ctx.fillText('游戏结束', screenWidth / 2 - 100, screenHeight / 2);
+            ctx.font = '24px Arial';
+            ctx.fillStyle = COLORS.black;
+            ctx.fillText(`总得分: ${score}`, screenWidth / 2 - 60, screenHeight / 2 + 50);
+        }
+
+        // 检查和应用算法偏见
+        function applyAlgorithmBias() {
+            if (carriedPackage && remainingTime <= taskTimeLimit * 0.3) { // 如果剩余时间少于任务时间的30%，触发算法偏见
+                score -= algorithmBiasPenalty;
+                alert('未能及时送达包裹，分数减少 5 分！');
+            }
+        }
+
+        // 更新骑手移动
+        function updateRider() {
+            if (keys.ArrowLeft && rider.x > blockPadding / 2) rider.x -= riderSpeed;
+            if (keys.ArrowRight && rider.x + rider.width < screenWidth - blockPadding / 2) rider.x += riderSpeed;
+            if (keys.ArrowUp && rider.y > blockPadding / 2) rider.y -= riderSpeed;
+            if (keys.ArrowDown && rider.y + rider.height < screenHeight - blockPadding / 2) rider.y += riderSpeed;
+        }
+
+        // 检查骑手是否拾取包裹
+        function checkPackagePickup() {
+            packages.forEach((pkg, index) => {
+                if (
+                    rider.x < pkg.x + pkg.width &&
+                    rider.x + rider.width > pkg.x &&
+                    rider.y < pkg.y + pkg.height &&
+                    rider.y + rider.height > pkg.y
+                ) {
+                    carriedPackage = pkg;
+                    packages.splice(index, 1);
+                    remainingTime = taskTimeLimit; // 重置时间
+                    applyAlgorithmBias(); // 检查并应用算法偏见
+                }
+            });
+        }
+        // 检查骑手是否送达包裹
+        function checkPackageDelivery() {
+            if (carriedPackage) {
+                customers.forEach((customer, index) => {
+                    if (
+                        rider.x < customer.x + customer.width &&
+                        rider.x + rider.width > customer.x &&
+                        rider.y < customer.y + customer.height &&
+                        rider.y + rider.height > customer.y &&
+                        carriedPackage.number === customer.number
+                    ) {
+                        score += 10 + Math.floor(remainingTime); // 成功送达加分，剩余时间越多加分越高
+                        carriedPackage = null; // 清除当前携带包裹
+                        customers.splice(index, 1); // 移除已完成的客户
+                    }
+                });
+            }
+        }
+
+        // 初始化车辆对象
+        const cars = [];
+
+        function generateCars() {
+            for (let i = 0; i < 5; i++) { // 生成 5 辆车
+                const randomRow = Math.floor(Math.random() * gridSize);
+                const randomColumn = Math.floor(Math.random() * gridSize);
+                const x = randomColumn * (blockSize + blockPadding) + blockSize / 2 - 20;
+                const y = randomRow * (blockSize + blockPadding) + blockSize / 2 - 10;
+                const color = COLORS.red; // 所有车辆为同一颜色
+                cars.push({ x, y, width: 40, height: 20, color, direction: Math.random() > 0.5 ? 'horizontal' : 'vertical', speed: 2 });
+            }
+        }
+
+        function drawCars() {
+            cars.forEach((car, index) => {
+                ctx.fillStyle = car.color;
+                ctx.fillRect(car.x, car.y, car.width, car.height);
+                ctx.fillStyle = COLORS.white;
+                ctx.font = '12px Arial';
+                ctx.fillText(`车${index + 1}`, car.x + 5, car.y + car.height / 2);
+            });
+        }
+
+        function updateCars() {
+            cars.forEach(car => {
+                if (car.direction === 'horizontal') {
+                    car.x += car.speed;
+                    if (car.x > screenWidth || car.x < 0) car.speed *= -1;
+                } else {
+                    car.y += car.speed;
+                    if (car.y > screenHeight || car.y < 0) car.speed *= -1;
+                }
+            });
+        }
+
+        function checkCarCollision() {
+            cars.forEach(car => {
+                if (
+                    rider.x < car.x + car.width &&
+                    rider.x + rider.width > car.x &&
+                    rider.y < car.y + car.height &&
+                    rider.y + rider.height > car.y
+                ) {
+                    score -= 10; // 撞车扣分
+                    alert('您撞到了车辆，扣 10 分！');
+                    // 骑手位置复位
+                    rider.x = screenWidth / 2 - 25;
+                    rider.y = screenHeight - 100;
+                    // 随机重新设置车辆位置
+                    const randomRow = Math.floor(Math.random() * gridSize);
+                    const randomColumn = Math.floor(Math.random() * gridSize);
+                    car.x = randomColumn * (blockSize + blockPadding) + blockSize / 2 - 20;
+                    car.y = randomRow * (blockSize + blockPadding) + blockSize / 2 - 10;
+                }
+            });
+        }
+
+        function applyAlgorithmBias() {
+            if (carriedPackage && remainingTime <= taskTimeLimit * 0.3) { // 如果剩余时间少于任务时间的30%，触发算法偏见
+                score -= algorithmBiasPenalty;
+                alert('未能及时送达包裹，分数减少 5 分！');
+            }
+        }
+
+        // 渲染骑手
+        function drawRider() {
+            ctx.fillStyle = rider.color;
+            ctx.fillRect(rider.x, rider.y, rider.width, rider.height);
+            ctx.fillStyle = COLORS.white;
+            ctx.font = '14px Arial';
+            ctx.fillText(`骑手`, rider.x + 5, rider.y + rider.height / 2);
+        }
+
+        // 渲染客户
+        function drawCustomers() {
+            customers.forEach(customer => {
+                ctx.fillStyle = customer.color;
+                ctx.fillRect(customer.x, customer.y, customer.width, customer.height);
+                ctx.fillStyle = COLORS.white;
+                ctx.font = '12px Arial';
+                ctx.fillText(`客户${customer.number}`, customer.x + 5, customer.y + customer.height / 2);
+            });
+        }
+
+        // 渲染包裹
+        function drawPackages() {
+            packages.forEach(pkg => {
+                ctx.fillStyle = pkg.color;
+                ctx.fillRect(pkg.x, pkg.y, pkg.width, pkg.height);
+                ctx.fillStyle = COLORS.white;
+                ctx.font = '12px Arial';
+                ctx.fillText(`包裹${pkg.number}`, pkg.x + 5, pkg.y + pkg.height / 2);
+            });
+        }
+
+        // 主游戏循环
+        function gameLoop() {
+            if (!gameStarted) return;
+
+            if (customers.length === 0 && packages.length === 0) {
+                showGameOver();
+                gameStarted = false;
+                return;
+            }
+
+            if (remainingTime <= 0) {
+                alert('任务超时！分数减少 10 分');
+                score -= 10; // 超时惩罚
+                carriedPackage = null;
+                remainingTime = taskTimeLimit; // 重置时间
+            }
+
+            ctx.fillStyle = COLORS.white;
+            ctx.fillRect(0, 0, screenWidth, screenHeight);
+
+            drawRider();
+            drawCustomers();
+            drawPackages();
+            drawCars(); // 绘制车辆
+            drawScore();
+
+            updateRider();
+            updateCars(); // 更新车辆移动
+            checkPackagePickup();
+            checkPackageDelivery();
+            checkCarCollision(); // 检查是否撞车
+
+            remainingTime -= 1 / 60; // 每帧减少时间
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 按键监听
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault(); // 阻止页面滚动
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            keys[e.key] = false;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault(); // 阻止页面滚动
+            }
+        });
+
+        // 开始游戏按钮
+        const startButton = document.getElementById('startButton');
+        startButton.addEventListener('click', () => {
+            gameStarted = true;
+            score = 0;
+            carriedPackage = null;
+            customers.length = 0;
+            packages.length = 0;
+            cars.length = 0;
+            remainingTime = taskTimeLimit;
+            generateObjects();
+            generateCars(); // 生成车辆
+            gameLoop();
+        });
+
+    </script>
+</body>
+
+</html>

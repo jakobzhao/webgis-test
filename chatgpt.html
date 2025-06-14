@@ -1,0 +1,199 @@
+<!-- Updated code with real image URLs -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Capitol Hill StoryMap with Critical Narrative</title>
+    <script src="https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            font-family: sans-serif;
+        }
+
+        #sidebar {
+            width: 40%;
+            height: 100vh;
+            overflow-y: scroll;
+            padding: 1em;
+            box-sizing: border-box;
+            background-color: #f5f5f5;
+        }
+
+        #map {
+            width: 60%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .stop {
+            margin-bottom: 2em;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 1em;
+        }
+
+        .stop h3 {
+            margin: 0.2em 0;
+        }
+
+        .stop img {
+            max-width: 100%;
+            border-radius: 4px;
+            margin: 0.5em 0;
+        }
+
+        .critical {
+            color: #444;
+            font-style: italic;
+            margin-top: 0.5em;
+        }
+
+        .maplibregl-marker-number {
+            background: #2b7bb9;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar"></div>
+    <div id="map"></div>
+
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://tiles.stadiamaps.com/styles/osm_bright.json',
+            center: [-122.3145, 47.6303],
+            zoom: 14
+        });
+
+        const stops = [
+            {
+                id: 1,
+                title: "Volunteer Park Conservatory",
+                desc: "A Victorian-style greenhouse built in 1912, showcasing exotic plants in a Eurocentric vision of nature. Once part of elite urban planning.",
+                image: "https://www.volunteerparkconservatory.org/wp-content/uploads/2020/10/Conservatory-Exterior.jpg",
+                critical: "Reflects early 20th-century white urban leisure ideals, contrasting with marginalized public spaces elsewhere in Seattle.",
+                coord: [-122.3145, 47.6303]
+            },
+            {
+                id: 2,
+                title: "Asian Art Museum",
+                desc: "Originally opened in 1933, this museum celebrates Asian art, but raises questions about colonial-era collecting practices.",
+                image: "https://secretseattle.co/wp-content/uploads/2021/04/Asian-Art-Museum.jpg",
+                critical: "Displays cultural heritage in a building created during Japanese incarceration era—layers of admiration and erasure coexist.",
+                coord: [-122.3148, 47.6309]
+            },
+            {
+                id: 3,
+                title: "Water Tower Observation Deck",
+                desc: "Built in 1906, the tower provides sweeping views of Seattle, symbolizing visibility, surveillance, and dominance over terrain.",
+                image: "https://seattlebloggers.com/wp-content/uploads/2013/10/Volunteer-Park-Water-Tower.jpg",
+                critical: "The structure literalizes elevation as power—who sees the city from above? Who remains unseen?",
+                coord: [-122.3134, 47.6306]
+            },
+            {
+                id: 4,
+                title: "Lake View Cemetery (Bruce Lee's Grave)",
+                desc: "Resting place of martial arts icon Bruce Lee and his son Brandon. A cultural pilgrimage site globally.",
+                image: "https://seattlebloggers.com/wp-content/uploads/2013/10/Bruce-Lee-Grave-Site.jpg",
+                critical: "This Asian American monument contrasts with Seattle’s historic exclusionary zoning and racist covenants. A site of memory and contradiction.",
+                coord: [-122.3176, 47.6313]
+            },
+            {
+                id: 5,
+                title: "Harvard-Belmont Landmark District",
+                desc: "Neighborhood of opulent mansions, built by Seattle’s wealthy in the early 1900s, largely white and exclusionary.",
+                image: "https://seatoday.6amcity.com/wp-content/uploads/sites/20/2021/08/Harvard-Belmont-District.jpg",
+                critical: "Represents class and racial privilege cemented in architecture. Who had access to these 'beautiful homes' then—and now?",
+                coord: [-122.3201, 47.6328]
+            },
+            {
+                id: 6,
+                title: "Saint Mark’s Cathedral",
+                desc: "A massive Gothic cathedral that remains incomplete—a symbol of civic ambition and interrupted faith.",
+                image: "https://www.sacred-destinations.com/usa/seattle-st-marks-cathedral/photos/st-marks-cathedral-exterior.jpg",
+                critical: "Its unfinished nave might be read as a metaphor for Seattle’s incomplete social cohesion and divided spiritual topography.",
+                coord: [-122.3211, 47.6199]
+            },
+            {
+                id: 7,
+                title: "Louisa Boren Lookout",
+                desc: "A scenic viewpoint named after a settler woman, offering views of Lake Washington.",
+                image: "https://beautifulwashington.com/images/King_County/Parks/Seattle/Central_Seattle/Louisa_Boren/01.jpg",
+                critical: "Naming practices erase Indigenous presence—no mention here of the Duwamish whose lands this was.",
+                coord: [-122.3143, 47.6254]
+            }
+        ];
+
+        const sidebar = document.getElementById('sidebar');
+        const routeCoords = [];
+
+        stops.forEach((stop, index) => {
+            const el = document.createElement('div');
+            el.className = 'maplibregl-marker-number';
+            el.innerText = stop.id;
+
+            new maplibregl.Marker({ element: el })
+                .setLngLat(stop.coord)
+                .setPopup(new maplibregl.Popup().setText(`${stop.title}: ${stop.desc}`))
+                .addTo(map);
+
+            const div = document.createElement('div');
+            div.className = 'stop';
+            div.innerHTML = `
+        <h3>#${index + 1} ${stop.title}</h3>
+        <img src="${stop.image}" alt="${stop.title}" />
+        <p>${stop.desc}</p>
+        <p class="critical">🧭 ${stop.critical}</p>
+      `;
+            div.onclick = () => {
+                map.flyTo({ center: stop.coord, zoom: 16 });
+            };
+            sidebar.appendChild(div);
+
+            routeCoords.push(stop.coord);
+        });
+
+        map.on('load', () => {
+            map.addSource('walk-line', {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: routeCoords
+                    }
+                }
+            });
+
+            map.addLayer({
+                id: 'walk-line-layer',
+                type: 'line',
+                source: 'walk-line',
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint: {
+                    'line-color': '#d9534f',
+                    'line-width': 4,
+                    'line-opacity': 0.7
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
